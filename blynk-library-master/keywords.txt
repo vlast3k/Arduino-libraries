@@ -1,0 +1,20 @@
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+Blynk	KEYWORD3
+WidgetConsole	KEYWORD1
+WidgetSD	KEYWORD1
+WidgetLCD	KEYWORD1
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+begin	KEYWORD2
+run	KEYWORD2
+virtualWrite	KEYWORD2
+BLYNK_READ	KEYWORD2
+BLYNK_WRITE	KEYWORD2
+#######################################
+# Literals (LITERAL1)
+#######################################
+BLYNK_DEBUG	LITERAL1
+BLYNK_PRINT	LITERAL1
