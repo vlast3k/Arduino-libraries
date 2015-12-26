@@ -28,7 +28,7 @@ int vSAP_Auth::checkSAPAuth(const char *user, const char *pass) {
     return -1;
   }
   if (strstr(WiFi.SSID().c_str(), "SAP-Guest") == 0) {
-    Serial.printf("Network is not SAP-Guest : %s\n", WiFi.SSID().c_str());
+    //Serial.printf("Network is not SAP-Guest : %s\n", WiFi.SSID().c_str());
     return -1;
   }
   strcpy(SAP_AUTH_USER, user);
