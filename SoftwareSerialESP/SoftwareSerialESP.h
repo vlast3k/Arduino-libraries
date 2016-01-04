@@ -20,41 +20,45 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 */
 
-#ifndef SoftwareSerial_h
-#define SoftwareSerial_h
+#ifndef SoftwareSerialESP_h
+#define SoftwareSerialESP_h
 
 #include <inttypes.h>
 #include <Stream.h>
-
+extern "C" {
+  #include "osapi.h"
+  #include "ets_sys.h"
+  #include "user_interface.h"
+}
 
 // This class is compatible with the corresponding AVR one,
 // the constructor however has an optional rx buffer size.
 // Speed up to 115200 can be used.
 
 
-class SoftwareSerial : public Stream
+class SoftwareSerialESP : public Stream
 {
 public:
-   SoftwareSerial(int receivePin, int transmitPin, unsigned int buffSize = 64);
-   ~SoftwareSerial();
+   SoftwareSerialESP(int receivePin, int transmitPin, unsigned int buffSize = 64);
+   ~SoftwareSerialESP();
 
    void begin(long speed);
 
    int peek();
 
-   virtual size_t write(uint8_t byte);
+   virtual size_t write(uint8_t byte)  ;
    virtual int read();
    virtual int available();
    virtual void flush();
    operator bool() {return m_rxValid || m_txValid;}
 
-   static void handle_interrupt(SoftwareSerial *swSerObj);
+   static void handle_interrupt(SoftwareSerialESP *swSerObj) ICACHE_RAM_ATTR  ;
 
    using Print::write;
 
 private:
    bool isValidGPIOpin(int pin);
-   void rxRead();
+   void rxRead() ICACHE_RAM_ATTR  ;
 
    // Member variables
    int m_rxPin, m_txPin;

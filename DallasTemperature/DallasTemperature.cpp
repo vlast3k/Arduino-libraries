@@ -17,12 +17,12 @@ extern "C" {
 }
 #endif
 
-DallasTemperature::DallasTemperature(OneWire* _oneWire)
+DallasTemperature::DallasTemperature(OneWire* _OneWire)
   #if REQUIRESALARMS
   : _AlarmHandler(&defaultAlarmHandler)
   #endif
 {
-  _wire = _oneWire;
+  _wire = _OneWire;
   devices = 0;
   parasite = false;
   bitResolution = 9;

@@ -1,6 +1,6 @@
 /*
 
-SoftwareSerial.cpp - Implementation of the Arduino software serial for ESP8266.
+SoftwareSerialESP.cpp - Implementation of the Arduino software serial for ESP8266.
 Copyright (c) 2015 Peter Lerup. All rights reserved.
 
 This library is free software; you can redistribute it and/or
@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include <Arduino.h>
 
+
 // The Arduino standard GPIO routines are not enough,
 // must use some from the Espressif SDK as well
 extern "C" {
@@ -29,7 +30,7 @@ extern "C" {
 
 #include <SoftwareSerialESP.h>
 
-SoftwareSerial::SoftwareSerial(int receivePin, int transmitPin, unsigned int buffSize) {
+SoftwareSerialESP::SoftwareSerialESP(int receivePin, int transmitPin, unsigned int buffSize) {
    m_rxValid = m_txValid = false;
    m_buffer = NULL;
    if (isValidGPIOpin(receivePin)) {
@@ -55,7 +56,7 @@ SoftwareSerial::SoftwareSerial(int receivePin, int transmitPin, unsigned int buf
    begin(9600);
 }
 
-SoftwareSerial::~SoftwareSerial() {
+SoftwareSerialESP::~SoftwareSerialESP() {
    // No available SDK API to detach an interrupt handler,
    // just disable the pin interrupt for now
    gpio_pin_intr_state_set(GPIO_ID_PIN(m_rxPin), GPIO_PIN_INTR_DISABLE);
@@ -63,12 +64,12 @@ SoftwareSerial::~SoftwareSerial() {
       free(m_buffer);
 }
 
-bool SoftwareSerial::isValidGPIOpin(int pin) {
+bool SoftwareSerialESP::isValidGPIOpin(int pin) {
    // Some GPIO pins are reserved by the system
    return (pin >= 0 && pin <= 5) || (pin >= 12 && pin <= 15);
 }
 
-void SoftwareSerial::begin(long speed) {
+void SoftwareSerialESP::begin(long speed) {
    m_bitTime = round(1000000.0/speed);
    if (m_bitTime < 5 || m_bitTime > 500) {
       // Invalid speed
@@ -76,27 +77,27 @@ void SoftwareSerial::begin(long speed) {
    }
 }
 
-int SoftwareSerial::read() {
+int SoftwareSerialESP::read() {
    if (!m_rxValid || (m_inPos == m_outPos)) return -1;
    uint8_t ch = m_buffer[m_outPos];
    m_outPos = (m_outPos+1) % m_buffSize;
    return ch;
 }
 
-int SoftwareSerial::available() {
+int SoftwareSerialESP::available() {
    return m_rxValid && ((m_inPos-m_outPos) > 0);
 }
 
 // Use micros loop to get as exect timing as possible
-#define WAIT { while (micros()-start < wait); wait += m_bitTime; }
+#define WAIT { while (system_get_time()-start < wait); wait += m_bitTime; }
 
-size_t SoftwareSerial::write(uint8_t b) {
+size_t SoftwareSerialESP::write(uint8_t b) {
    if (!m_txValid) return 0;
    // Disable interrupt in order to get a clean transmit
    cli();
    uint16_t wait = m_bitTime;
    digitalWrite(m_txPin, HIGH);
-   unsigned long start = micros();
+   unsigned long start = system_get_time();
     // Start bit;
    digitalWrite(m_txPin, LOW);
    WAIT;
@@ -112,18 +113,18 @@ size_t SoftwareSerial::write(uint8_t b) {
    return 1;
 }
 
-void SoftwareSerial::flush() {
+void SoftwareSerialESP::flush() {
    m_inPos = m_outPos = 0;
 }
 
-int SoftwareSerial::peek() {
+int SoftwareSerialESP::peek() {
    if (!m_rxValid || (m_inPos == m_outPos)) return -1;
    return m_buffer[m_outPos];
 }
 
-void SoftwareSerial::rxRead() {
+void SoftwareSerialESP::rxRead() {
    uint16_t wait = m_bitTime;
-   unsigned long start = micros();
+   unsigned long start = system_get_time();
    // Skip half start bit unless this is less than normal interrupt delay time
    if (m_bitTime > 10) {
      wait = m_bitTime/2;
@@ -146,7 +147,7 @@ void SoftwareSerial::rxRead() {
    }
 }
 
-void SoftwareSerial::handle_interrupt(SoftwareSerial *swSerObj) {
+void SoftwareSerialESP::handle_interrupt(SoftwareSerialESP *swSerObj)  {
    if (!swSerObj) return;
 
    // Check if this interrupt was was coming from the the rx pin of this object
