@@ -18,17 +18,7 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 #include <Arduino.h>
-
-enum ColorType
-{
-    ColorType_Rgb,
-    ColorType_Hsl
-};
-
 #include "RgbColor.h"
-#include "HslColor.h"
-#include "HsbColor.h"
-#include "NeoPixelAnimator.h"
 
 // '_flagsPixels' flags for LED _pixels (third parameter to constructor):
 #define NEO_RGB     0x00 // Wired for RGB data order
@@ -49,8 +39,6 @@ class NeoPixelBus
 {
 public:
     // Constructor: number of LEDs, pin number, LED type
-    // NOTE:  Pin Number is ignored in this version due to use of hardware UART
-    // but it is left in the argument list for easy switching between versions of the library
     NeoPixelBus(uint16_t n, uint8_t p, uint8_t t = NEO_GRB | NEO_KHZ800);
     ~NeoPixelBus();
 
@@ -61,7 +49,7 @@ public:
 
     void Begin();
     void Show();
-    inline bool CanShow(void) const
+    inline bool CanShow(void) 
     { 
         return (micros() - _endTime) >= 50L; 
     }
@@ -71,7 +59,7 @@ public:
         ClearTo(c.R, c.G, c.B);
     }
 
-    bool IsDirty() const
+    bool IsDirty()
     {
         return  (_flagsPixels & NEO_DIRTY);
     };
@@ -84,11 +72,11 @@ public:
         _flagsPixels &= ~NEO_DIRTY;
     }
 
-    uint8_t* Pixels() const
+    uint8_t*  Pixels() const
     {
         return _pixels;
     };
-    uint16_t PixelCount() const
+    uint16_t  PixelCount() const
     {
         return _countPixels;
     };
@@ -101,22 +89,49 @@ public:
 
     RgbColor GetPixelColor(uint16_t n) const;
 
-private:
-    friend NeoPixelAnimator;
+    void StartAnimating();
+    void UpdateAnimations();
 
+    bool IsAnimating() const
+    {
+        return _activeAnimations > 0;
+    }
+    void LinearFadePixelColor(uint16_t time, uint16_t n, RgbColor color);
+
+    void FadeTo(uint16_t time, RgbColor color);
+
+private:
+    void setPin(uint8_t p);
     void UpdatePixelColor(uint16_t n, uint8_t r, uint8_t g, uint8_t b);
     void UpdatePixelColor(uint16_t n, RgbColor c)
     {
         UpdatePixelColor(n, c.R, c.G, c.B);
     };
 
-    const uint16_t    _countPixels;     // Number of RGB LEDs in strip
+    const uint16_t    _countPixels;       // Number of RGB LEDs in strip
     const uint16_t    _sizePixels;      // Size of '_pixels' buffer below
     
-    uint8_t _flagsPixels;    // Pixel flags (400 vs 800 KHz, RGB vs GRB color)
+    uint8_t _flagsPixels;          // Pixel flags (400 vs 800 KHz, RGB vs GRB color)
+    uint8_t _pin;           // Output pin number
     uint8_t* _pixels;        // Holds LED color values (3 bytes each)
     uint32_t _endTime;       // Latch timing reference
+#ifdef __AVR__
+    const volatile uint8_t* _port;         // Output PORT register
+    uint8_t _pinMask;       // Output PORT bitmask
+#endif
 
-    const char _uartData[4] = { 0b00110111, 0b00000111, 0b00110100, 0b00000100 };
+    struct FadeAnimation
+    {
+        uint16_t time;
+        uint16_t remaining;
+
+        RgbColor target;
+        RgbColor origin;
+    };
+
+    uint16_t _activeAnimations;
+    FadeAnimation* _animations;
+    uint32_t _animationLastTick;
+
 };
 

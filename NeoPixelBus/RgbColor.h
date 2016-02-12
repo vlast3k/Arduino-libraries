@@ -17,9 +17,6 @@ License along with NeoPixel.  If not, see
 
 #include <Arduino.h>
 
-struct HslColor;
-struct HsbColor;
-
 // ------------------------------------------------------------------------
 // RgbColor represents a color object that is represented by Red, Green, Blue
 // component values.  It contains helpful color routines to manipulate the 
@@ -46,16 +43,6 @@ struct RgbColor
 	};
 
     // ------------------------------------------------------------------------
-    // Construct a RgbColor using HslColor
-    // ------------------------------------------------------------------------
-    RgbColor(HslColor color);
-
-    // ------------------------------------------------------------------------
-    // Construct a RgbColor using HsbColor
-    // ------------------------------------------------------------------------
-    RgbColor(HsbColor color);
-
-    // ------------------------------------------------------------------------
     // Construct a RgbColor that will have its values set in latter operations
     // CAUTION:  The R,G,B members are not initialized and may not be consistent
     // ------------------------------------------------------------------------
@@ -67,7 +54,7 @@ struct RgbColor
     // CalculateBrightness will calculate the overall brightness
     // NOTE: This is a simple linear brightness
     // ------------------------------------------------------------------------
-	uint8_t CalculateBrightness() const;
+	uint8_t CalculateBrightness();
 
     // ------------------------------------------------------------------------
     // Darken will adjust the color by the given delta toward black
@@ -87,10 +74,10 @@ struct RgbColor
     // LinearBlend between two colors by the amount defined by progress variable
     // left - the color to start the blend at
     // right - the color to end the blend at
-    // progress - (0.0 - 1.0) value where 0 will return left and 1.0 will return right
+    // progress - (0-255) value where 0 will return left and 255 will return right
     //     and a value between will blend the color weighted linearly between them
     // ------------------------------------------------------------------------
-	static RgbColor LinearBlend(RgbColor left, RgbColor right, float progress);
+	static RgbColor LinearBlend(RgbColor left, RgbColor right, uint8_t progress);
     
     // ------------------------------------------------------------------------
     // Red, Green, Blue color members (0-255) where 
