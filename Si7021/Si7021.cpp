@@ -191,7 +191,7 @@ uint8_t SI7021::readRegister(uint8_t reg)
     Wire.beginTransmission(SI7021_ADDR);
     Wire.write(reg);
     Wire.endTransmission(false);
-    delay(75);
+    delay(105);
     Wire.requestFrom(SI7021_ADDR, 1);
     return Wire.read();
 }
@@ -202,7 +202,7 @@ uint16_t SI7021::readSensor(uint8_t reg)
     Wire.beginTransmission(SI7021_ADDR);
     Wire.write(reg);
     Wire.endTransmission(false);
-    delay(75);
+    delay(105);
     Wire.requestFrom(SI7021_ADDR, 2);
     var = Wire.read() << 8;
     var |= Wire.read() & 0x0FF;
