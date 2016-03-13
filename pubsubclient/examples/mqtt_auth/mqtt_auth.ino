@@ -1,64 +1,43 @@
 /*
  Basic MQTT example with Authentication
- 
+
   - connects to an MQTT server, providing username
     and password
   - publishes "hello world" to the topic "outTopic"
   - subscribes to the topic "inTopic"
 */
 
-#include <ESP8266WiFi.h>
+#include <SPI.h>
+#include <Ethernet.h>
 #include <PubSubClient.h>
 
-const char *ssid =	"xxxxxxxx";		// cannot be longer than 32 characters!
-const char *pass =	"yyyyyyyy";		//
-
 // Update these with values suitable for your network.
+byte mac[]    = {  0xDE, 0xED, 0xBA, 0xFE, 0xFE, 0xED };
+IPAddress ip(172, 16, 0, 100);
 IPAddress server(172, 16, 0, 2);
 
-void callback(const MQTT::Publish& pub) {
+void callback(char* topic, byte* payload, unsigned int length) {
   // handle message arrived
 }
 
-WiFiClient wclient;
-PubSubClient client(wclient, server);
+EthernetClient ethClient;
+PubSubClient client(server, 1883, callback, ethClient);
 
-void setup() {
-  // Setup console
-  Serial.begin(115200);
-  delay(10);
-  Serial.println();
-  Serial.println();
-}
-
-void loop() {
-  if (WiFi.status() != WL_CONNECTED) {
-    Serial.print("Connecting to ");
-    Serial.print(ssid);
-    Serial.println("...");
-    WiFi.begin(ssid, pass);
-
-    if (WiFi.waitForConnectResult() != WL_CONNECTED)
-      return;
-    Serial.println("WiFi connected");
-  }
-
-  if (WiFi.status() == WL_CONNECTED) {
-    if (!client.connected()) {
-      Serial.println("Connecting to MQTT server");
-      if (client.connect(MQTT::Connect("arduinoClient")
-			 .set_auth("testeruser", "testpass"))) {
-        Serial.println("Connected to MQTT server");
-	client.set_callback(callback);
-	client.publish("outTopic","hello world");
-	client.subscribe("inTopic");
-      } else {
-        Serial.println("Could not connect to MQTT server");   
-      }
-    }
-
-    if (client.connected())
-      client.loop();
+void setup()
+{
+  Ethernet.begin(mac, ip);
+  // Note - the default maximum packet size is 128 bytes. If the
+  // combined length of clientId, username and password exceed this,
+  // you will need to increase the value of MQTT_MAX_PACKET_SIZE in
+  // PubSubClient.h
+  
+  if (client.connect("arduinoClient", "testuser", "testpass")) {
+    client.publish("outTopic","hello world");
+    client.subscribe("inTopic");
   }
 }
 
+void loop()
+{
+  client.loop();
+}

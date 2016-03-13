@@ -5,6 +5,8 @@ Currently handles 400 and 800 KHz bitstreams on 8, 12 and 16 MHz ATmega
 MCUs, with LEDs wired for RGB or GRB color order.  8 MHz MCUs provide
 output on PORTB and PORTD, while 16 MHz chips can handle most output pins
 (possible exception with upper PORT registers on the Arduino Mega).
+(possible exception with upper PORT registers on the Arduino Mega).
+(possible exception with upper PORT registers on the Arduino Mega).
 
 Originally written by Phil Burgess / Paint Your Dragon for Adafruit Industries,
 contributions by PJRC and other members of the open source community.

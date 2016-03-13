@@ -8,7 +8,7 @@ class SI7021
 	public:
 			SI7021();
 			/* Main Functions */
-			void begin(int sda = D2, int scl = D1);
+			void begin(int sda = 4, int scl = 5);
 			float readHumidity();
 			float readTemp();
 			float readTempPrev();
