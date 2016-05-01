@@ -12,7 +12,13 @@ SI7021::SI7021()
 
 void SI7021::begin(int sda, int scl)
 {
-	Wire.begin(sda, scl);											// Begin I2C
+//	Wire.begin(sda, scl);											// Begin I2C
+    Serial.println("a0aaaaaa22222");
+    delay(100);
+	Wire.begin();											// Begin I2C
+    Serial.println("a1");
+    delay(100);
+    
 	reset();												// Reset sensor
 }
 
@@ -116,7 +122,7 @@ uint16_t SI7021::getDeviceID()
 	Wire.write(0xFC); 										// Send first address byte
 	Wire.write(0xC9); 										// Send second address byte
 	Wire.endTransmission(false);
-   // delay(75);
+    //delay(75);
 	Wire.requestFrom(SI7021_ADDR, 1); 						// Request first byte
 	uint8_t SNB3 = Wire.read(); 							// Read SNB3 byte (ID)
 		if(SNB3 == 0x0D)		return 7013;				// Device is Si7013
@@ -134,7 +140,7 @@ uint8_t SI7021::getFirmwareVer()
 	Wire.write(0x84); 										// Send first address byte
 	Wire.write(0xB8); 										// Send second address byte
 	Wire.endTransmission(false);
-   // delay(75);
+    //delay(75);
 	Wire.requestFrom(SI7021_ADDR, 1);						// Request first byte
 	uint8_t fwV = Wire.read(); 								// Read firmware version
 		if(fwV == 0x20)			return 2;					// Firmware version 2.0
@@ -149,10 +155,20 @@ uint8_t SI7021::checkVDD()
 
 void SI7021::reset(uint8_t delayR)
 {
+        Serial.println("a4");
+delay(100);
 	Wire.beginTransmission(SI7021_ADDR);
+        Serial.println("a5");
+delay(100);
 	Wire.write(0xFE); 										// Write reset command
+        Serial.println("a6");
+delay(100);
     Wire.endTransmission();
+        Serial.println("a7");
+delay(100);
 	delay(delayR);											// Default = 15ms
+        Serial.println("a8");
+delay(100);
 }
 
 uint16_t SI7021::floatToInt(float FtoI)
@@ -191,7 +207,7 @@ uint8_t SI7021::readRegister(uint8_t reg)
     Wire.beginTransmission(SI7021_ADDR);
     Wire.write(reg);
     Wire.endTransmission(false);
-    delay(105);
+    delay(50);
     Wire.requestFrom(SI7021_ADDR, 1);
     return Wire.read();
 }
@@ -202,7 +218,7 @@ uint16_t SI7021::readSensor(uint8_t reg)
     Wire.beginTransmission(SI7021_ADDR);
     Wire.write(reg);
     Wire.endTransmission(false);
-    delay(105);
+    delay(50);
     Wire.requestFrom(SI7021_ADDR, 2);
     var = Wire.read() << 8;
     var |= Wire.read() & 0x0FF;

@@ -58,8 +58,11 @@ void CubicGasSensors::co2Set400ppm() {
 }
 
 void CubicGasSensors::checkForReset() {
-  if (millis() > 7L*60*1000 && EEPROM.read(eepromReset) == 1) {
+  if (millis() > 5L*60*1000 && EEPROM.read(eepromReset) == 1) {
     EEPROM.write(eepromReset, 0);
+    #ifdef ESP8266
+      EEPROM.commit();
+    #endif
     co2Set400ppm();
   }
 }
@@ -75,7 +78,8 @@ int CubicGasSensors::rawReadCM1106_CO2() {
 }
 
 
-int CubicGasSensors::getCO2() {
+int CubicGasSensors::getCO2(boolean dbg) {
+  DEBUG = dbg;
   if (timePassed(lastNDIRRead, NDIR_READ_TIMEOUT) == false) return (int)raCM1106.getAverage();
   checkForReset();
   lastNDIRRead = millis();

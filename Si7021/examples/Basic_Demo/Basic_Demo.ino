@@ -35,7 +35,7 @@ SI7021 si7021;
 
 void setup()
 {
-Serial.begin(115200);
+Serial.begin(9600);
 si7021.begin(); // Runs : Wire.begin() + reset()
   while(!Serial); // Wait for serial monitor to open
 Serial.println("BASIC DEMO");

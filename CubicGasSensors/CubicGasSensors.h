@@ -24,8 +24,9 @@ class CubicGasSensors
   // user-accessible "public" interface
   public:
     CubicGasSensors(uint8_t _rx, uint8_t _tx, uint16_t _eepromReset) : rx(_rx), tx(_tx), eepromReset(_eepromReset), raCM1106(2) {}
-    int getCO2();
+    int getCO2(boolean dbg=false);
     void printDebugInfo();
+    int rawReadCM1106_CO2();
     boolean hasStarted() {
         return startedCO2Monitoring;
     }
@@ -42,7 +43,6 @@ class CubicGasSensors
     boolean sendCmd(uint8_t *cmd, uint8_t *resp);
     void co2Set400ppm();
     void checkForReset();
-    int rawReadCM1106_CO2();
     void dump(uint8_t *r);
     boolean timePassed(unsigned long since, unsigned long interval) {
        return (unsigned long)(millis() - since) > interval;
