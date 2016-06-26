@@ -17,6 +17,8 @@
 //#endif
 
 #define NDIR_READ_TIMEOUT 10000L
+#define CM1106 'C'
+#define CM1102 'B'
 
 enum CubicStatus {
     CB_INIT, CB_WARMUP, CB_CALIBRATE, CB_STARTED
@@ -28,10 +30,12 @@ class CubicGasSensors
 {
   // user-accessible "public" interface
   public:
-    CubicGasSensors(uint8_t _rx, uint8_t _tx, CubicStatusCb _cb, uint16_t _eepromReset) : rx(_rx), tx(_tx), eepromReset(_eepromReset), raCM1106(2), statusCb(_cb) {}
+    CubicGasSensors(CubicStatusCb _cb, uint16_t _eepromReset, uint8_t _rx=100, uint8_t _tx=100 ) ;
+    void init();
     int getCO2(boolean dbg=false);
     void printDebugInfo();
     int rawReadCM1106_CO2(bool dbg=false);
+    int getSWVersion(bool dbg=false);
     boolean hasStarted() {
         return startedCO2Monitoring;
     }
@@ -45,6 +49,8 @@ class CubicGasSensors
     CubicStatusCb statusCb;
     CubicStatus currentStatus = CB_INIT;
     bool sentResetCmd = false;
+    uint8_t ports[4][2] ={{5,12},{12,5},{14,13},{13,14}};
+    uint8_t sensorType;
 
     void setStatus(CubicStatus newStatus);
     byte getCS(byte* buf);
