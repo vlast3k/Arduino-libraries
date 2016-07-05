@@ -7,9 +7,13 @@
 
 #pragma once
 
-#ifdef ARDUINOJSON_ENABLE_STD_STREAM
+#include "../Configuration.hpp"
 
-#include "../Arduino/Print.hpp"
+#if ARDUINOJSON_ENABLE_STD_STREAM
+
+#include "../Print.hpp"
+
+#include <ostream>
 
 namespace ArduinoJson {
 namespace Internals {

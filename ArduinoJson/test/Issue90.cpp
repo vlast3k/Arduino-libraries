@@ -7,18 +7,18 @@
 
 #include <gtest/gtest.h>
 #include <limits.h>  // for LONG_MAX
-#define ARDUINOJSON_ENABLE_STD_STREAM
+
+#define ARDUINOJSON_USE_LONG_LONG 0
+#define ARDUINOJSON_USE_INT64 0
 #include <ArduinoJson.h>
 
 #define SUITE Issue90
-
-using namespace ArduinoJson::Internals;
 
 static const char* superLong =
     "12345678901234567890123456789012345678901234567890123456789012345678901234"
     "5678901234567890123456789012345678901234567890123456789012345678901234567";
 
-static const JsonVariant variant = Unparsed(superLong);
+static const JsonVariant variant = RawJson(superLong);
 
 TEST(SUITE, IsNotALong) { ASSERT_FALSE(variant.is<long>()); }
 

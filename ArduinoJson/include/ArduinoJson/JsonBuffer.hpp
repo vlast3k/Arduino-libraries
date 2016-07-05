@@ -11,12 +11,16 @@
 #include <stdint.h>  // for uint8_t
 #include <string.h>
 
-#include "Arduino/String.hpp"
 #include "JsonVariant.hpp"
+#include "String.hpp"
 
 #if defined(__clang__)
+#pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnon-virtual-dtor"
 #elif defined(__GNUC__)
+#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)
+#pragma GCC diagnostic push
+#endif
 #pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
 #endif
 
@@ -94,6 +98,21 @@ class JsonBuffer {
     return parseObject(json.c_str(), nesting);
   }
 
+  // Generalized version of parseArray() and parseObject(), also works for
+  // integral types.
+  JsonVariant parse(char *json, uint8_t nestingLimit = DEFAULT_LIMIT);
+
+  // Same with a const char*.
+  // With this overload, the JsonBuffer will make a copy of the string
+  JsonVariant parse(const char *json, uint8_t nesting = DEFAULT_LIMIT) {
+    return parse(strdup(json), nesting);
+  }
+
+  // Same as above with a String class
+  JsonVariant parse(const String &json, uint8_t nesting = DEFAULT_LIMIT) {
+    return parse(json.c_str(), nesting);
+  }
+
   // Duplicate a string
   char *strdup(const char *src) {
     return src ? strdup(src, strlen(src)) : NULL;
@@ -107,12 +126,11 @@ class JsonBuffer {
  protected:
   // Preserve aligment if nessary
   static FORCE_INLINE size_t round_size_up(size_t bytes) {
-#if defined ARDUINO_ARCH_AVR
-    // alignment isn't needed for 8-bit AVR
-    return bytes;
-#else
+#if ARDUINOJSON_ENABLE_ALIGNMENT
     const size_t x = sizeof(void *) - 1;
     return (bytes + x) & ~x;
+#else
+    return bytes;
 #endif
   }
 
@@ -135,3 +153,11 @@ class JsonBuffer {
   static const uint8_t DEFAULT_LIMIT = 10;
 };
 }
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)
+#pragma GCC diagnostic pop
+#endif
+#endif

@@ -15,21 +15,24 @@ Features
 * JSON decoding (comments are supported)
 * JSON encoding (with optional indentation)
 * Elegant API, very easy to use
-* Efficient (no malloc, nor copy)
+* Fixed memory allocation (zero malloc)
+* No data duplication (zero copy)
 * Portable (written in C++98)
 * Self-contained (no external dependency)
 * Small footprint
+* Header-only library
 * MIT License
 
 Works on
 --------
 
-* All Arduino boards
+* All Arduino boards (Uno, Due, Mini, Micro, Yun...)
 * ESP8266
 * Teensy
-* Intel Edison
+* Intel Edison and Galileo
 * PlatformIO
 * Energia
+* RedBearLab boards (BLE Nano...)
 * Computers (Windows, Linux, OSX...)
 
 See [FAQ: Compatibility issues](https://github.com/bblanchon/ArduinoJson/wiki/Compatibility-issues)
@@ -90,31 +93,37 @@ From StackOverflow user `thegreendroid`:
 > It has a really elegant, simple API and it works like a charm on embedded and Windows/Linux platforms. We recently started using this on an embedded project and I can vouch for its quality.
 
 From GitHub user `zacsketches`:
-
 > Thanks for a great library!!!
 > I've been watching you consistently develop this library over the past six months, and I used it today for a publish and subscribe architecture designed to help hobbyists move into more advanced robotics. Your library allowed me to implement remote subscription in order to facilitate multi-processor robots.
 > ArduinoJson saved me a week's worth of time!!
 
 [From Reddit user `erm_what_`](https://www.reddit.com/r/arduino/comments/3jj6ep/announcing_arduinojson_50/cusjk8c):
-
 > This is a great library and I wouldn't be able to do the project I'm doing without it. I completely recommend it.
 
 [From Reddit user `makerhacks`](https://www.reddit.com/r/arduino/comments/3jj6ep/announcing_arduinojson_50/cusqg7b):
-
 > I am just starting an ESP8266 clock project and now I can output JSON from my server script and interpret it painlessly.
+
+[From Twitter user `@hemalchevli`](https://twitter.com/hemalchevli/status/715788439397011456):
+> ArduinoJson library should be used as a benchmark/reference for making libraries. Truly elegant.
 
 Donators
 --------
 
 Special thanks to the following persons and companies who made generous donations to the library author:
 
-* Robert Murphy
-* Surge Communications
-* Alex Scott
-* Firepick Services LLC
-* A B Doodkorte
-* Scott Smith
-* Johann Stieger
+* Robert Murphy <img alt='USA' src='https://cdnjs.cloudflare.com/ajax/libs/emojione/2.1.4/assets/svg/1f1fa-1f1f8.svg' width='18' height='18'>
+* Surge Communications <img alt='USA' src='https://cdnjs.cloudflare.com/ajax/libs/emojione/2.1.4/assets/svg/1f1fa-1f1f8.svg' width='18' height='18'>
+* Alex Scott <img alt='United Kingdom' src='https://cdnjs.cloudflare.com/ajax/libs/emojione/2.1.4/assets/svg/1f1ec-1f1e7.svg' width='18' height='18'>
+* Firepick Services LLC <img alt='USA' src='https://cdnjs.cloudflare.com/ajax/libs/emojione/2.1.4/assets/svg/1f1fa-1f1f8.svg' width='18' height='18'>
+* A B Doodkorte <img alt='Netherlands' src='https://cdnjs.cloudflare.com/ajax/libs/emojione/2.1.4/assets/svg/1f1f3-1f1f1.svg' width='18' height='18'>
+* Scott Smith <img alt='USA' src='https://cdnjs.cloudflare.com/ajax/libs/emojione/2.1.4/assets/svg/1f1fa-1f1f8.svg' width='18' height='18'>
+* Johann Stieger <img alt='Austria' src='https://cdnjs.cloudflare.com/ajax/libs/emojione/2.1.4/assets/svg/1f1e6-1f1f9.svg' width='18' height='18'>
+* Gustavo Donizeti Gini <img alt='Brazil' src='https://cdnjs.cloudflare.com/ajax/libs/emojione/2.1.4/assets/svg/1f1e7-1f1f7.svg' width='18' height='18'>
+* Charles-Henri Hallard <img alt='France' src='https://cdnjs.cloudflare.com/ajax/libs/emojione/2.1.4/assets/svg/1f1eb-1f1f7.svg' width='18' height='18'>
+* Martijn van den Burg <img alt='Netherlands' src='https://cdnjs.cloudflare.com/ajax/libs/emojione/2.1.4/assets/svg/1f1f3-1f1f1.svg' width='18' height='18'>
+* Nick Koumaris <img alt='Greece' src='https://cdnjs.cloudflare.com/ajax/libs/emojione/2.1.4/assets/svg/1f1ec-1f1f7.svg' width='18' height='18'>
+* Jon Williams <img alt='USA' src='https://cdnjs.cloudflare.com/ajax/libs/emojione/2.1.4/assets/svg/1f1fa-1f1f8.svg' width='18' height='18'>
+* Kestutis Liaugminas <img alt='Lithuania' src='https://cdnjs.cloudflare.com/ajax/libs/emojione/2.1.4/assets/svg/1f1f1-1f1f9.svg' width='18' height='18'>
 
 ---
 

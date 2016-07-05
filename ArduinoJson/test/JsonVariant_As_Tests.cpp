@@ -5,9 +5,10 @@
 // https://github.com/bblanchon/ArduinoJson
 // If you like this project, please add a star!
 
-#include <gtest/gtest.h>
-#define ARDUINOJSON_ENABLE_STD_STREAM
 #include <ArduinoJson.h>
+
+#include <gtest/gtest.h>
+#include <stdint.h>
 
 static const char* null = 0;
 
@@ -29,6 +30,11 @@ TEST(JsonVariant_As_Tests, DoubleAsString) {
 TEST(JsonVariant_As_Tests, DoubleAsLong) {
   JsonVariant variant = 4.2;
   ASSERT_EQ(4L, variant.as<long>());
+}
+
+TEST(JsonVariant_As_Tests, DoubleAsUnsigned) {
+  JsonVariant variant = 4.2;
+  ASSERT_EQ(4U, variant.as<unsigned>());
 }
 
 TEST(JsonVariant_As_Tests, DoubleZeroAsBool) {
@@ -91,9 +97,14 @@ TEST(JsonVariant_As_Tests, LongZeroAsBool) {
   ASSERT_FALSE(variant.as<bool>());
 }
 
-TEST(JsonVariant_As_Tests, LongAsDouble) {
+TEST(JsonVariant_As_Tests, PositiveLongAsDouble) {
   JsonVariant variant = 42L;
   ASSERT_EQ(42.0, variant.as<double>());
+}
+
+TEST(JsonVariant_As_Tests, NegativeLongAsDouble) {
+  JsonVariant variant = -42L;
+  ASSERT_EQ(-42.0, variant.as<double>());
 }
 
 TEST(JsonVariant_As_Tests, LongAsString) {
@@ -136,6 +147,18 @@ TEST(JsonVariant_As_Tests, NumberStringAsLong) {
   ASSERT_EQ(42L, variant.as<long>());
 }
 
+#if ARDUINOJSON_USE_LONG_LONG || ARDUINOJSON_USE_INT64
+TEST(JsonVariant_As_Tests, NumberStringAsInt64Negative) {
+  JsonVariant variant = "-9223372036854775808";
+  ASSERT_EQ(-9223372036854775807 - 1, variant.as<long long>());
+}
+
+TEST(JsonVariant_As_Tests, NumberStringAsInt64Positive) {
+  JsonVariant variant = "9223372036854775807";
+  ASSERT_EQ(9223372036854775807, variant.as<long long>());
+}
+#endif
+
 TEST(JsonVariant_As_Tests, RandomStringAsBool) {
   JsonVariant variant = "hello";
   ASSERT_FALSE(variant.as<bool>());
@@ -144,6 +167,16 @@ TEST(JsonVariant_As_Tests, RandomStringAsBool) {
 TEST(JsonVariant_As_Tests, RandomStringAsLong) {
   JsonVariant variant = "hello";
   ASSERT_EQ(0L, variant.as<long>());
+}
+
+TEST(JsonVariant_As_Tests, RandomStringAsConstCharPtr) {
+  JsonVariant variant = "hello";
+  ASSERT_STREQ("hello", variant.as<const char*>());
+}
+
+TEST(JsonVariant_As_Tests, RandomStringAsCharPtr) {
+  JsonVariant variant = "hello";
+  ASSERT_STREQ("hello", variant.as<char*>());
 }
 
 TEST(JsonVariant_As_Tests, RandomStringAsString) {

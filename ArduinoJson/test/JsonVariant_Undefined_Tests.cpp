@@ -6,7 +6,6 @@
 // If you like this project, please add a star!
 
 #include <gtest/gtest.h>
-#define ARDUINOJSON_ENABLE_STD_STREAM
 #include <ArduinoJson.h>
 
 class JsonVariant_Undefined_Tests : public ::testing::Test {
@@ -16,6 +15,10 @@ class JsonVariant_Undefined_Tests : public ::testing::Test {
 
 TEST_F(JsonVariant_Undefined_Tests, AsLongReturns0) {
   EXPECT_EQ(0, variant.as<long>());
+}
+
+TEST_F(JsonVariant_Undefined_Tests, AsUnsignedReturns0) {
+  EXPECT_EQ(0, variant.as<unsigned>());
 }
 
 TEST_F(JsonVariant_Undefined_Tests, AsStringReturnsNull) {

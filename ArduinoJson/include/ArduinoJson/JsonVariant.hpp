@@ -13,8 +13,14 @@
 #include "Internals/JsonPrintable.hpp"
 #include "Internals/JsonVariantContent.hpp"
 #include "Internals/JsonVariantType.hpp"
-#include "Internals/Unparsed.hpp"
 #include "JsonVariantBase.hpp"
+#include "RawJson.hpp"
+#include "TypeTraits/EnableIf.hpp"
+#include "TypeTraits/IsFloatingPoint.hpp"
+#include "TypeTraits/IsIntegral.hpp"
+#include "TypeTraits/IsSame.hpp"
+#include "TypeTraits/RemoveConst.hpp"
+#include "TypeTraits/RemoveReference.hpp"
 
 namespace ArduinoJson {
 
@@ -31,61 +37,280 @@ class JsonObject;
 // - a reference to a JsonArray or JsonObject
 class JsonVariant : public JsonVariantBase<JsonVariant> {
  public:
+  template <typename T>
+  struct IsConstructibleFrom;
+
   // Creates an uninitialized JsonVariant
-  FORCE_INLINE JsonVariant() : _type(Internals::JSON_UNDEFINED) {}
+  JsonVariant() : _type(Internals::JSON_UNDEFINED) {}
 
   // Create a JsonVariant containing a boolean value.
   // It will be serialized as "true" or "false" in JSON.
-  FORCE_INLINE JsonVariant(bool value);
+  JsonVariant(bool value) {
+    using namespace Internals;
+    _type = JSON_BOOLEAN;
+    _content.asInteger = static_cast<JsonInteger>(value);
+  }
 
   // Create a JsonVariant containing a floating point value.
   // The second argument specifies the number of decimal digits to write in
   // the JSON string.
-  FORCE_INLINE JsonVariant(float value, uint8_t decimals = 2);
-  FORCE_INLINE JsonVariant(double value, uint8_t decimals = 2);
+  // JsonVariant(double value, uint8_t decimals);
+  // JsonVariant(float value, uint8_t decimals);
+  template <typename T>
+  JsonVariant(T value, uint8_t decimals = 2,
+              typename TypeTraits::EnableIf<
+                  TypeTraits::IsFloatingPoint<T>::value>::type * = 0) {
+    using namespace Internals;
+    _type = static_cast<JsonVariantType>(JSON_FLOAT_0_DECIMALS + decimals);
+    _content.asFloat = static_cast<JsonFloat>(value);
+  }
 
   // Create a JsonVariant containing an integer value.
-  FORCE_INLINE JsonVariant(signed char value);
-  FORCE_INLINE JsonVariant(signed long value);
-  FORCE_INLINE JsonVariant(signed int value);
-  FORCE_INLINE JsonVariant(signed short value);
-  FORCE_INLINE JsonVariant(unsigned char value);
-  FORCE_INLINE JsonVariant(unsigned long value);
-  FORCE_INLINE JsonVariant(unsigned int value);
-  FORCE_INLINE JsonVariant(unsigned short value);
+  // JsonVariant(signed short)
+  // JsonVariant(signed int)
+  // JsonVariant(signed long)
+  template <typename T>
+  JsonVariant(T value,
+              typename TypeTraits::EnableIf<
+                  TypeTraits::IsSignedIntegral<T>::value>::type * = 0) {
+    using namespace Internals;
+    if (value >= 0) {
+      _type = JSON_POSITIVE_INTEGER;
+      _content.asInteger = static_cast<JsonUInt>(value);
+    } else {
+      _type = JSON_NEGATIVE_INTEGER;
+      _content.asInteger = static_cast<JsonUInt>(-value);
+    }
+  }
+  // JsonVariant(unsigned short)
+  // JsonVariant(unsigned int)
+  // JsonVariant(unsigned long)
+  template <typename T>
+  JsonVariant(T value,
+              typename TypeTraits::EnableIf<
+                  TypeTraits::IsUnsignedIntegral<T>::value>::type * = 0) {
+    using namespace Internals;
+    _type = JSON_POSITIVE_INTEGER;
+    _content.asInteger = static_cast<JsonUInt>(value);
+  }
 
   // Create a JsonVariant containing a string.
-  FORCE_INLINE JsonVariant(const char *value);
+  JsonVariant(const char *value) {
+    _type = Internals::JSON_STRING;
+    _content.asString = value;
+  }
 
   // Create a JsonVariant containing an unparsed string
-  FORCE_INLINE JsonVariant(Internals::Unparsed value);
+  JsonVariant(RawJson value) {
+    _type = Internals::JSON_UNPARSED;
+    _content.asString = value;
+  }
 
   // Create a JsonVariant containing a reference to an array.
-  FORCE_INLINE JsonVariant(JsonArray &array);
+  JsonVariant(JsonArray &array) {
+    _type = Internals::JSON_ARRAY;
+    _content.asArray = &array;
+  }
 
   // Create a JsonVariant containing a reference to an object.
-  FORCE_INLINE JsonVariant(JsonObject &object);
+  JsonVariant(JsonObject &object) {
+    _type = Internals::JSON_OBJECT;
+    _content.asObject = &object;
+  }
 
   // Get the variant as the specified type.
-  // See cast operators for details.
+  //
+  // short as<signed short>() const;
+  // int as<signed int>() const;
+  // long as<signed long>() const;
   template <typename T>
-  T as() const;
+  const typename TypeTraits::EnableIf<TypeTraits::IsSignedIntegral<T>::value,
+                                      T>::type
+  as() const {
+    return static_cast<T>(asInteger());
+  }
+  //
+  // short as<unsigned short>() const;
+  // int as<unsigned int>() const;
+  // long as<unsigned long>() const;
+  template <typename T>
+  const typename TypeTraits::EnableIf<TypeTraits::IsUnsignedIntegral<T>::value,
+                                      T>::type
+  as() const {
+    return static_cast<T>(asUnsignedInteger());
+  }
+  //
+  // double as<double>() const;
+  // float as<float>() const;
+  template <typename T>
+  const typename TypeTraits::EnableIf<TypeTraits::IsFloatingPoint<T>::value,
+                                      T>::type
+  as() const {
+    return static_cast<T>(asFloat());
+  }
+  //
+  // const String as<String>() const;
+  template <typename T>
+  const typename TypeTraits::EnableIf<TypeTraits::IsSame<T, String>::value,
+                                      T>::type
+  as() const {
+    return toString();
+  }
+  //
+  // const char* as<const char*>() const;
+  // const char* as<char*>() const;
+  template <typename T>
+  typename TypeTraits::EnableIf<TypeTraits::IsSame<T, const char *>::value ||
+                                    TypeTraits::IsSame<T, char *>::value,
+                                const char *>::type
+  as() const {
+    return asString();
+  }
+  //
+  // const bool as<bool>() const
+  template <typename T>
+  const typename TypeTraits::EnableIf<TypeTraits::IsSame<T, bool>::value,
+                                      T>::type
+  as() const {
+    return asInteger() != 0;
+  }
+  //
+  // JsonArray& as<JsonArray> const;
+  // JsonArray& as<JsonArray&> const;
+  // JsonArray& as<const JsonArray&> const;
+  template <typename T>
+  typename TypeTraits::EnableIf<
+      TypeTraits::IsSame<
+          typename TypeTraits::RemoveConst<
+              typename TypeTraits::RemoveReference<T>::type>::type,
+          JsonArray>::value,
+      JsonArray &>::type
+  as() const {
+    return asArray();
+  }
+  //
+  // JsonObject& as<JsonObject> const;
+  // JsonObject& as<JsonObject&> const;
+  // JsonObject& as<const JsonObject&> const;
+  template <typename T>
+  typename TypeTraits::EnableIf<
+      TypeTraits::IsSame<
+          typename TypeTraits::RemoveConst<
+              typename TypeTraits::RemoveReference<T>::type>::type,
+          JsonObject>::value,
+      JsonObject &>::type
+  as() const {
+    return asObject();
+  }
 
   // Tells weither the variant has the specified type.
   // Returns true if the variant has type type T, false otherwise.
+  //
+  // short as<short>() const;
+  // int as<int>() const;
+  // long as<long>() const;
   template <typename T>
-  bool is() const;
+  const typename TypeTraits::EnableIf<TypeTraits::IsIntegral<T>::value,
+                                      bool>::type
+  is() const {
+    return isInteger();
+  }
+  //
+  // double is<double>() const;
+  // float is<float>() const;
+  template <typename T>
+  const typename TypeTraits::EnableIf<TypeTraits::IsFloatingPoint<T>::value,
+                                      bool>::type
+  is() const {
+    return isFloat();
+  }
+  //
+  // const bool is<bool>() const
+  template <typename T>
+  const typename TypeTraits::EnableIf<TypeTraits::IsSame<T, bool>::value,
+                                      bool>::type
+  is() const {
+    return isBoolean();
+  }
+  //
+  // bool is<const char*>() const;
+  // bool is<char*>() const;
+  template <typename T>
+  typename TypeTraits::EnableIf<TypeTraits::IsSame<T, const char *>::value ||
+                                    TypeTraits::IsSame<T, char *>::value,
+                                bool>::type
+  is() const {
+    return isString();
+  }
+  //
+  // bool is<JsonArray> const;
+  // bool is<JsonArray&> const;
+  // bool is<const JsonArray&> const;
+  template <typename T>
+  typename TypeTraits::EnableIf<
+      TypeTraits::IsSame<
+          typename TypeTraits::RemoveConst<
+              typename TypeTraits::RemoveReference<T>::type>::type,
+          JsonArray>::value,
+      bool>::type
+  is() const {
+    return isArray();
+  }
+  //
+  // JsonObject& as<JsonObject> const;
+  // JsonObject& as<JsonObject&> const;
+  // JsonObject& as<const JsonObject&> const;
+  template <typename T>
+  typename TypeTraits::EnableIf<
+      TypeTraits::IsSame<
+          typename TypeTraits::RemoveConst<
+              typename TypeTraits::RemoveReference<T>::type>::type,
+          JsonObject>::value,
+      bool>::type
+  is() const {
+    return isObject();
+  }
+
+  // Returns true if the variant has a value
+  bool success() const {
+    return _type != Internals::JSON_UNDEFINED;
+  }
 
   // Serialize the variant to a JsonWriter
   void writeTo(Internals::JsonWriter &writer) const;
 
-  // TODO: rename
+  // Value returned if the variant has an incompatible type
   template <typename T>
-  static T invalid();
+  static T defaultValue() {
+    return T();
+  }
+
+  const char *asString() const;
+  JsonArray &asArray() const;
+  JsonObject &asObject() const;
 
  private:
+  // It's not allowed to store a char
+  template <typename T>
+  JsonVariant(T value, typename TypeTraits::EnableIf<
+                           TypeTraits::IsSame<T, char>::value>::type * = 0);
+
+  String toString() const;
   Internals::JsonFloat asFloat() const;
   Internals::JsonInteger asInteger() const;
+  Internals::JsonUInt asUnsignedInteger() const;
+  bool isBoolean() const;
+  bool isFloat() const;
+  bool isInteger() const;
+  bool isArray() const {
+    return _type == Internals::JSON_ARRAY;
+  }
+  bool isObject() const {
+    return _type == Internals::JSON_OBJECT;
+  }
+  bool isString() const {
+    return _type == Internals::JSON_STRING;
+  }
 
   // The current type of the variant
   Internals::JsonVariantType _type;
@@ -101,7 +326,27 @@ inline JsonVariant float_with_n_digits(float value, uint8_t digits) {
 inline JsonVariant double_with_n_digits(double value, uint8_t digits) {
   return JsonVariant(value, digits);
 }
-}
 
-// Include inline implementations
-#include "JsonVariant.ipp"
+template <typename T>
+struct JsonVariant::IsConstructibleFrom {
+  static const bool value =
+      TypeTraits::IsIntegral<T>::value ||
+      TypeTraits::IsFloatingPoint<T>::value ||
+      TypeTraits::IsSame<T, bool>::value ||
+      TypeTraits::IsSame<T, char *>::value ||
+      TypeTraits::IsSame<T, const char *>::value ||
+      TypeTraits::IsSame<T, RawJson>::value ||
+      TypeTraits::IsSame<T, JsonArray &>::value ||
+      TypeTraits::IsSame<T, const JsonArray &>::value ||
+      TypeTraits::IsSame<T, JsonArraySubscript &>::value ||
+      TypeTraits::IsSame<T, const JsonArraySubscript &>::value ||
+      TypeTraits::IsSame<T, JsonObject &>::value ||
+      TypeTraits::IsSame<T, const JsonObject &>::value ||
+      TypeTraits::IsSame<T, JsonObjectSubscript<const char *> &>::value ||
+      TypeTraits::IsSame<T, const JsonObjectSubscript<const char *> &>::value ||
+      TypeTraits::IsSame<T, JsonObjectSubscript<String> &>::value ||
+      TypeTraits::IsSame<T, const JsonObjectSubscript<String> &>::value ||
+      TypeTraits::IsSame<T, JsonVariant &>::value ||
+      TypeTraits::IsSame<T, const JsonVariant &>::value;
+};
+}

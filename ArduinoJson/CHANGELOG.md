@@ -1,10 +1,67 @@
 ArduinoJson: change log
 =======================
 
-HEAD
-----
+v5.6.1
+------
+
+* Added missing `#pragma once` (issue #310)
+
+v5.6.0
+------
+
+* ArduinoJson is now a header-only library (issue #199)
+
+v5.5.1
+------
+
+* Fixed compilation error with Intel Galileo (issue #299)
+
+v5.5.0
+------
+
+* Added `JsonVariant::success()` (issue #279)
+* Renamed `JsonVariant::invalid<T>()` to `JsonVariant::defaultValue<T>()`
+
+v5.4.0
+------
+
+* Changed `::String` to `ArduinoJson::String` (issue #275)
+* Changed `::Print` to `ArduinoJson::Print` too
+
+v5.3.0
+------
+
+* Added custom implementation of `ftoa` (issues #266, #267, #269 and #270)
+* Added `JsonVariant JsonBuffer::parse()` (issue #265)
+* Fixed `unsigned long` printed as `signed long` (issue #170)
+
+v5.2.0
+------
+
+* Added `JsonVariant::as<char*>()` as a synonym for `JsonVariant::as<const char*>()` (issue #257)
+* Added example `JsonHttpClient` (issue #256)
+* Added `JsonArray::copyTo()` and `JsonArray::copyFrom()` (issue #254)
+* Added `RawJson()` to insert pregenerated JSON portions (issue #259)
+
+v5.1.1
+------
+
+* Removed `String` duplication when one replaces a value in a `JsonObject` (PR #232 by @ulion)
+
+v5.1.0
+------
+
+* Added support of `long long` (issue #171)
+* Moved all build settings to `ArduinoJson/Configuration.hpp`
+
+**BREAKING CHANGE**:
+If you defined `ARDUINOJSON_ENABLE_STD_STREAM`, you now need to define it to `1`.
+
+v5.0.8
+------
 
 * Made the library compatible with [PlatformIO](http://platformio.org/) (issue #181)
+* Fixed `JsonVariant::is<bool>()` that was incorrectly returning false (issue #214)
 
 v5.0.7
 ------

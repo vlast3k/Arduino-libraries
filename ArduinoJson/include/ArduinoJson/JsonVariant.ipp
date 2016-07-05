@@ -7,244 +7,171 @@
 
 #pragma once
 
+#include "Configuration.hpp"
 #include "JsonVariant.hpp"
+#include "Internals/Parse.hpp"
+#include "JsonArray.hpp"
+#include "JsonObject.hpp"
+
+#include <string.h>  // for strcmp
+#include <errno.h>   // for errno
+#include <stdlib.h>  // for strtol, strtod
 
 namespace ArduinoJson {
 
-inline JsonVariant::JsonVariant(bool value) {
+inline Internals::JsonInteger JsonVariant::asInteger() const {
   using namespace Internals;
-  _type = JSON_BOOLEAN;
-  _content.asInteger = static_cast<JsonInteger>(value);
+  switch (_type) {
+    case JSON_UNDEFINED:
+      return 0;
+    case JSON_POSITIVE_INTEGER:
+    case JSON_BOOLEAN:
+      return _content.asInteger;
+    case JSON_NEGATIVE_INTEGER:
+      return -static_cast<Internals::JsonInteger>(_content.asInteger);
+    case JSON_STRING:
+    case JSON_UNPARSED:
+      if (!_content.asString) return 0;
+      if (!strcmp("true", _content.asString)) return 1;
+      return parse<Internals::JsonInteger>(_content.asString);
+    default:
+      return static_cast<Internals::JsonInteger>(_content.asFloat);
+  }
 }
 
-inline JsonVariant::JsonVariant(const char *value) {
-  _type = Internals::JSON_STRING;
-  _content.asString = value;
-}
-
-inline JsonVariant::JsonVariant(Internals::Unparsed value) {
-  _type = Internals::JSON_UNPARSED;
-  _content.asString = value;
-}
-
-inline JsonVariant::JsonVariant(double value, uint8_t decimals) {
+inline Internals::JsonUInt JsonVariant::asUnsignedInteger() const {
   using namespace Internals;
-  _type = static_cast<JsonVariantType>(JSON_FLOAT_0_DECIMALS + decimals);
-  _content.asFloat = static_cast<JsonFloat>(value);
+  switch (_type) {
+    case JSON_UNDEFINED:
+      return 0;
+    case JSON_POSITIVE_INTEGER:
+    case JSON_BOOLEAN:
+    case JSON_NEGATIVE_INTEGER:
+      return _content.asInteger;
+    case JSON_STRING:
+    case JSON_UNPARSED:
+      if (!_content.asString) return 0;
+      if (!strcmp("true", _content.asString)) return 1;
+      return parse<Internals::JsonUInt>(_content.asString);
+    default:
+      return static_cast<Internals::JsonUInt>(_content.asFloat);
+  }
 }
 
-inline JsonVariant::JsonVariant(float value, uint8_t decimals) {
+inline const char *JsonVariant::asString() const {
   using namespace Internals;
-  _type = static_cast<JsonVariantType>(JSON_FLOAT_0_DECIMALS + decimals);
-  _content.asFloat = static_cast<JsonFloat>(value);
+  if (_type == JSON_UNPARSED && _content.asString &&
+      !strcmp("null", _content.asString))
+    return NULL;
+  if (_type == JSON_STRING || _type == JSON_UNPARSED) return _content.asString;
+  return NULL;
 }
 
-inline JsonVariant::JsonVariant(JsonArray &array) {
-  _type = Internals::JSON_ARRAY;
-  _content.asArray = &array;
-}
-
-inline JsonVariant::JsonVariant(JsonObject &object) {
-  _type = Internals::JSON_OBJECT;
-  _content.asObject = &object;
-}
-
-inline JsonVariant::JsonVariant(signed char value) {
+inline Internals::JsonFloat JsonVariant::asFloat() const {
   using namespace Internals;
-  _type = JSON_INTEGER;
-  _content.asInteger = static_cast<JsonInteger>(value);
+  switch (_type) {
+    case JSON_UNDEFINED:
+      return 0;
+    case JSON_POSITIVE_INTEGER:
+    case JSON_BOOLEAN:
+      return static_cast<JsonFloat>(_content.asInteger);
+    case JSON_NEGATIVE_INTEGER:
+      return -static_cast<JsonFloat>(_content.asInteger);
+    case JSON_STRING:
+    case JSON_UNPARSED:
+      return _content.asString ? parse<JsonFloat>(_content.asString) : 0;
+    default:
+      return _content.asFloat;
+  }
 }
 
-inline JsonVariant::JsonVariant(signed int value) {
+inline String JsonVariant::toString() const {
   using namespace Internals;
-  _type = JSON_INTEGER;
-  _content.asInteger = static_cast<JsonInteger>(value);
+  String s;
+  if ((_type == JSON_STRING || _type == JSON_UNPARSED) &&
+      _content.asString != NULL)
+    s = _content.asString;
+  else
+    printTo(s);
+  return s;
 }
 
-inline JsonVariant::JsonVariant(signed long value) {
+inline bool JsonVariant::isBoolean() const {
   using namespace Internals;
-  _type = JSON_INTEGER;
-  _content.asInteger = static_cast<JsonInteger>(value);
+  if (_type == JSON_BOOLEAN) return true;
+
+  if (_type != JSON_UNPARSED || _content.asString == NULL) return false;
+
+  return !strcmp(_content.asString, "true") ||
+         !strcmp(_content.asString, "false");
 }
 
-inline JsonVariant::JsonVariant(signed short value) {
+inline bool JsonVariant::isInteger() const {
   using namespace Internals;
-  _type = JSON_INTEGER;
-  _content.asInteger = static_cast<JsonInteger>(value);
+  if (_type == JSON_POSITIVE_INTEGER || _type == JSON_NEGATIVE_INTEGER)
+    return true;
+
+  if (_type != JSON_UNPARSED || _content.asString == NULL) return false;
+
+  char *end;
+  errno = 0;
+  strtol(_content.asString, &end, 10);
+
+  return *end == '\0' && errno == 0;
 }
 
-inline JsonVariant::JsonVariant(unsigned char value) {
+inline bool JsonVariant::isFloat() const {
   using namespace Internals;
-  _type = JSON_INTEGER;
-  _content.asInteger = static_cast<JsonInteger>(value);
+  if (_type >= JSON_FLOAT_0_DECIMALS) return true;
+
+  if (_type != JSON_UNPARSED || _content.asString == NULL) return false;
+
+  char *end;
+  errno = 0;
+  strtod(_content.asString, &end);
+
+  return *end == '\0' && errno == 0 && !is<long>();
 }
 
-inline JsonVariant::JsonVariant(unsigned int value) {
+inline void JsonVariant::writeTo(Internals::JsonWriter &writer) const {
   using namespace Internals;
-  _type = JSON_INTEGER;
-  _content.asInteger = static_cast<JsonInteger>(value);
+  switch (_type) {
+    case JSON_UNDEFINED:
+      return;
+
+    case JSON_ARRAY:
+      _content.asArray->writeTo(writer);
+      return;
+
+    case JSON_OBJECT:
+      _content.asObject->writeTo(writer);
+      return;
+
+    case JSON_STRING:
+      writer.writeString(_content.asString);
+      return;
+
+    case JSON_UNPARSED:
+      writer.writeRaw(_content.asString);
+      return;
+
+    case JSON_NEGATIVE_INTEGER:
+      writer.writeRaw('-');
+    case JSON_POSITIVE_INTEGER:
+      writer.writeInteger(_content.asInteger);
+      return;
+
+    case JSON_BOOLEAN:
+      writer.writeBoolean(_content.asInteger != 0);
+      return;
+
+    default:
+      uint8_t decimals = static_cast<uint8_t>(_type - JSON_FLOAT_0_DECIMALS);
+      writer.writeFloat(_content.asFloat, decimals);
+  }
 }
 
-inline JsonVariant::JsonVariant(unsigned long value) {
-  using namespace Internals;
-  _type = JSON_INTEGER;
-  _content.asInteger = static_cast<JsonInteger>(value);
-}
-
-inline JsonVariant::JsonVariant(unsigned short value) {
-  using namespace Internals;
-  _type = JSON_INTEGER;
-  _content.asInteger = static_cast<JsonInteger>(value);
-}
-
-template <>
-String JsonVariant::as<String>() const;
-
-template <>
-const char *JsonVariant::as<const char *>() const;
-
-template <>
-inline bool JsonVariant::as<bool>() const {
-  return asInteger() != 0;
-}
-
-template <>
-inline signed char JsonVariant::as<signed char>() const {
-  return static_cast<signed char>(asInteger());
-}
-
-template <>
-inline unsigned char JsonVariant::as<unsigned char>() const {
-  return static_cast<unsigned char>(asInteger());
-}
-
-template <>
-inline signed short JsonVariant::as<signed short>() const {
-  return static_cast<signed short>(asInteger());
-}
-
-template <>
-inline unsigned short JsonVariant::as<unsigned short>() const {
-  return static_cast<unsigned short>(asInteger());
-}
-
-template <>
-inline signed int JsonVariant::as<signed int>() const {
-  return static_cast<signed int>(asInteger());
-}
-
-template <>
-inline unsigned int JsonVariant::as<unsigned int>() const {
-  return static_cast<unsigned int>(asInteger());
-}
-
-template <>
-inline unsigned long JsonVariant::as<unsigned long>() const {
-  return static_cast<unsigned long>(asInteger());
-}
-
-template <>
-inline signed long JsonVariant::as<signed long>() const {
-  return static_cast<unsigned long>(asInteger());
-}
-
-template <>
-inline double JsonVariant::as<double>() const {
-  return static_cast<double>(asFloat());
-}
-
-template <>
-inline float JsonVariant::as<float>() const {
-  return static_cast<float>(asFloat());
-}
-
-template <typename T>
-inline T JsonVariant::invalid() {
-  return T();
-}
-
-template <typename T>
-inline bool JsonVariant::is() const {
-  return false;
-}
-
-template <>  // in .cpp
-bool JsonVariant::is<signed long>() const;
-
-template <>  // in .cpp
-bool JsonVariant::is<double>() const;
-
-template <>
-inline bool JsonVariant::is<bool>() const {
-  return _type == Internals::JSON_BOOLEAN;
-}
-
-template <>
-inline bool JsonVariant::is<char const *>() const {
-  return _type == Internals::JSON_STRING;
-}
-
-template <>
-inline bool JsonVariant::is<float>() const {
-  return is<double>();
-}
-
-template <>
-inline bool JsonVariant::is<JsonArray &>() const {
-  return _type == Internals::JSON_ARRAY;
-}
-
-template <>
-inline bool JsonVariant::is<JsonArray const &>() const {
-  return _type == Internals::JSON_ARRAY;
-}
-
-template <>
-inline bool JsonVariant::is<JsonObject &>() const {
-  return _type == Internals::JSON_OBJECT;
-}
-
-template <>
-inline bool JsonVariant::is<JsonObject const &>() const {
-  return _type == Internals::JSON_OBJECT;
-}
-
-template <>
-inline bool JsonVariant::is<signed char>() const {
-  return is<signed long>();
-}
-
-template <>
-inline bool JsonVariant::is<signed int>() const {
-  return is<signed long>();
-}
-
-template <>
-inline bool JsonVariant::is<signed short>() const {
-  return is<signed long>();
-}
-
-template <>
-inline bool JsonVariant::is<unsigned char>() const {
-  return is<signed long>();
-}
-
-template <>
-inline bool JsonVariant::is<unsigned int>() const {
-  return is<signed long>();
-}
-
-template <>
-inline bool JsonVariant::is<unsigned long>() const {
-  return is<signed long>();
-}
-
-template <>
-inline bool JsonVariant::is<unsigned short>() const {
-  return is<signed long>();
-}
-
-#ifdef ARDUINOJSON_ENABLE_STD_STREAM
+#if ARDUINOJSON_ENABLE_STD_STREAM
 inline std::ostream &operator<<(std::ostream &os, const JsonVariant &source) {
   return source.printTo(os);
 }
