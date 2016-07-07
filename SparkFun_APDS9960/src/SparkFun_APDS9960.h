@@ -195,7 +195,7 @@ enum {
 
 /* State definitions */
 enum {
-  NA_STATE,
+  NA_STATE1,
   NEAR_STATE,
   FAR_STATE,
   ALL_STATE
