@@ -19,7 +19,6 @@
 #define NDIR_READ_TIMEOUT 10000L
 #define CM1106 'C'
 #define CM1102 'B'
-
 enum CubicStatus {
     CB_INIT, CB_WARMUP, CB_CALIBRATE, CB_STARTED
 };
@@ -65,4 +64,3 @@ class CubicGasSensors
 };
 
 #endif
-

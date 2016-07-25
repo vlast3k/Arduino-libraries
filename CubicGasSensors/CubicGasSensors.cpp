@@ -30,7 +30,7 @@ void CubicGasSensors::init() {
                 } else {
                     SERIAL << F("Sensor Type not recognized\n");
                 }
-                return ;        
+                return ;
             }
         }
         SERIAL << F("+") << endl;
@@ -52,7 +52,7 @@ boolean CubicGasSensors::validateCS(byte* resp) {
   }
   if (resp[resp[1]+2] != getCS(resp)) {
     dump(resp);
-    SERIAL << F("bad cs:") << _HEX(getCS(resp)) << F(", ") << _HEX(resp[resp[1]+2]) << endl;  
+    SERIAL << F("bad cs:") << _HEX(getCS(resp)) << F(", ") << _HEX(resp[resp[1]+2]) << endl;
     return false;
   }
   return true;
@@ -88,7 +88,7 @@ void CubicGasSensors::co2Set400ppm() {
         pinMode(13, INPUT); //release
     }
   SERIAL << F("done") <<endl;
-  
+
 }
 
 int CubicGasSensors::getSWVersion(bool dbg) {
@@ -104,7 +104,7 @@ int CubicGasSensors::getSWVersion(bool dbg) {
   SERIAL << F("CO2 Sensor SW Ver: ") << version << endl;
   if (dbg) SERIAL << F("done") <<endl;
   return version[0];
-  
+
 }
 
 
@@ -144,7 +144,7 @@ int CubicGasSensors::rawReadCM1106_CO2(bool dbg) {
   uint16_t value = ((uint16_t)256)*resp[3] + resp[4];
   if (DEBUG) SERIAL << "sss:" << value << endl;
   raCM1106.addValue(value);
-  return value;  
+  return value;
 }
 
 
@@ -170,7 +170,7 @@ int CubicGasSensors::getCO2(boolean dbg) {
     return (int)raCM1106.getAverage();
   }
   //SERIAL << "co2: " << (int)raCM1106.getAverage() << endl;
-  
+
 }
 
 void CubicGasSensors::dump(uint8_t *r) {

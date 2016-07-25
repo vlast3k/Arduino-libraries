@@ -40,6 +40,7 @@ bool isNaN(T x) {
 
 template <typename T>
 bool isNaN(T x) {
+  using namespace std;
   return isnan(x);
 }
 

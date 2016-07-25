@@ -38,6 +38,7 @@ bool isInfinity(T x) {
 #else
 template <typename T>
 bool isInfinity(T x) {
+  using namespace std;
   return isinf(x);
 }
 
