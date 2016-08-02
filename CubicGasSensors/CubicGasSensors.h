@@ -49,7 +49,7 @@ class CubicGasSensors
     CubicStatus currentStatus = CB_INIT;
     bool sentResetCmd = false;
     uint8_t ports[4][2] ={{5,12},{12,5},{14,13},{13,14}};
-    uint8_t sensorType;
+    uint8_t sensorType = CM1106;
 
     void setStatus(CubicStatus newStatus);
     byte getCS(byte* buf);

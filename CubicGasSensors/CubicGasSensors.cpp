@@ -21,7 +21,7 @@ void CubicGasSensors::init() {
         for (int i=0; i < 4; i++) {
             rx = ports[i][0];
             tx = ports[i][1];
-           // SERIAL << "Trying : " << rx <<","<< tx << endl ;
+            SERIAL << "Trying : " << rx <<","<< tx << endl ;
             if (sensorType = getSWVersion(DEBUG)) {
                 if (sensorType == CM1106) {
                     SERIAL << F("CM1106 Single Beam NDIR sensor\n");
