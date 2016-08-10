@@ -38,8 +38,7 @@ bool isInfinity(T x) {
 #else
 template <typename T>
 bool isInfinity(T x) {
-  using namespace std;
-  return isinf(x);
+  return std::isinf(x);
 }
 
 #if defined(_GLIBCXX_HAVE_ISINFL) && _GLIBCXX_HAVE_ISINFL
