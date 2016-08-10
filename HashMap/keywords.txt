@@ -1,0 +1,6 @@
+HashMap	KEYWORD1
+HashType	KEYWORD1
+
+getIndexOf	KEYWORD2
+getValueOf	KEYWORD2
+debug	KEYWORD2
