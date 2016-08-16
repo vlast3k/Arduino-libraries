@@ -5,7 +5,7 @@
 
 
 // include this library's description file
-#include <CubicGasSensors.h>
+#include "CubicGasSensors.h"
 #include <Streaming.h>
 #ifdef ESP8266
   #include <SoftwareSerialESP.h>
@@ -18,10 +18,10 @@ CubicGasSensors::CubicGasSensors(CubicStatusCb _cb, uint16_t _eepromReset, uint8
 
 void CubicGasSensors::init() {
     for (int j=0; j<5; j++) {
-        for (int i=0; i < 4; i++) {
+        for (int i=0; i < 2; i++) {
             rx = ports[i][0];
             tx = ports[i][1];
-            SERIAL << "Trying : " << rx <<","<< tx << endl ;
+            //SERIAL << "Trying : " << rx <<","<< tx << endl ;
             if (sensorType = getSWVersion(DEBUG)) {
                 if (sensorType == CM1106) {
                     SERIAL << F("CM1106 Single Beam NDIR sensor\n");
@@ -33,8 +33,8 @@ void CubicGasSensors::init() {
                 return ;
             }
         }
-        SERIAL << F("+") << endl;
-        delay(2000);
+        SERIAL << F("+");
+        delay(200);
     }
     SERIAL << F("ERROR: Could not locate CO2 Sensor") << endl;
     return ;
@@ -71,6 +71,7 @@ boolean CubicGasSensors::sendCmd(uint8_t *cmd, uint8_t *resp) {
   #ifndef ESP8266
   PM1106_swSer.end();
   #endif
+  PM1106_swSer.enableRx(false);
   if (DEBUG) dump(resp);
   return validateCS(resp);
 }
