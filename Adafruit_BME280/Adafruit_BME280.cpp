@@ -45,7 +45,7 @@ bool Adafruit_BME280::begin(uint8_t a) {
 
   if (_cs == -1) {
     // i2c
-    Wire.begin(D1, D6);
+    Wire.begin();
   } else {
 #ifdef SPI
     digitalWrite(_cs, HIGH);
