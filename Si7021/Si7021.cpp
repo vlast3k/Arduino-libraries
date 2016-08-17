@@ -12,7 +12,7 @@ SI7021::SI7021()
 
 void SI7021::begin(int sda, int scl)
 {
-	Wire.begin(sda, scl);											// Begin I2C
+	Wire.begin();											// Begin I2C
     //Serial.println("a0aaaaaa22222");
     //delay(100);
 	//Wire.begin();											// Begin I2C
