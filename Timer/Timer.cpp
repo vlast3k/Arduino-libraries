@@ -1,5 +1,5 @@
 /**
- *     
+ *
     This file is part of .PNG Arduino Framework.
 
     .PNG Arduino Framework is free software: you can redistribute it and/or modify
@@ -20,23 +20,24 @@
 #include "Timer.h"
 
 Timer::Timer(unsigned long int ms){
-	Create(ms, NULL, false);
+	Create(ms, NULL, false, millis);
 }
 
-Timer::Timer(unsigned long int ms, CallBackType callback){
-	Create(ms, callback, false);
+Timer::Timer(unsigned long int ms, CallBackType callback, MillisType mst){
+	Create(ms, callback, false, mst);
 }
 
 Timer::Timer(unsigned long int ms, CallBackType callback, bool isSingle){
-	Create(ms, callback, isSingle);
+	Create(ms, callback, isSingle, millis);
 }
 
-void Timer::Create(unsigned long int ms, CallBackType callback, bool isSingle){
+void Timer::Create(unsigned long int ms, CallBackType callback, bool isSingle, MillisType mst){
 	setInterval(ms);
 	setEnabled(false);
 	setSingleShot(isSingle);
 	setOnTimer(callback);
 	LastTime = 0;
+    millis2 = mst;
 }
 
 void Timer::setInterval(unsigned long int ms){
@@ -56,12 +57,12 @@ void Timer::setOnTimer(CallBackType callback){
 }
 
 void Timer::Start(){
-	LastTime = millis();
+	LastTime = millis2();
 	setEnabled(true);
 }
 
 void Timer::Resume(){
-	LastTime = millis() - DiffTime;
+	LastTime = millis2() - DiffTime;
 	setEnabled(true);
 }
 
@@ -71,7 +72,7 @@ void Timer::Stop(){
 }
 
 void Timer::Pause(){
-	DiffTime = millis() - LastTime;
+	DiffTime = millis2() - LastTime;
 	setEnabled(false);
 
 }
@@ -84,10 +85,10 @@ void Timer::Update(){
 bool Timer::Tick(){
 	if(!blEnabled)
 		return false;
-	if(LastTime > millis()*2)//millis restarted
+	if(LastTime > millis2()*2)//millis restarted
 		LastTime = 0;
-	if ((unsigned long int)(millis() - LastTime) >= msInterval) {
-		LastTime = millis();
+	if ((unsigned long int)(millis2() - LastTime) >= msInterval) {
+		LastTime = millis2();
 		if(isSingleShot())
 			setEnabled(false);
 	    return true;
@@ -101,7 +102,7 @@ unsigned long int Timer::getInterval(){
 }
 
 unsigned long int Timer::getCurrentTime(){
-	return (unsigned long int)(millis() - LastTime);
+	return (unsigned long int)(millis2() - LastTime);
 }
 CallBackType Timer::getOnTimerCallback(){
 	return onRun;

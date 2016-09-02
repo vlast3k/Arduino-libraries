@@ -1,5 +1,5 @@
 /**
- *     
+ *
     This file is part of .PNG Arduino Framework.
 
     .PNG Arduino Framework is free software: you can redistribute it and/or modify
@@ -23,11 +23,11 @@
 #ifndef TIMER_H
 #define TIMER_H
 typedef void (*CallBackType)();
-
+typedef unsigned long (*MillisType)();
 
 class Timer{
 private:
-	void Create(unsigned long int ms, CallBackType callback, bool isSingle);
+	void Create(unsigned long int ms, CallBackType callback, bool isSingle, MillisType mst);
 	unsigned long int msInterval;
 	bool blEnabled;
 	bool blSingleShot;
@@ -38,7 +38,7 @@ private:
 
 public:
 	Timer(unsigned long int ms);
-	Timer(unsigned long int ms, CallBackType callback);
+	Timer(unsigned long int ms, CallBackType callback, MillisType millisType);
 	Timer(unsigned long int ms, CallBackType callback, bool isSingle);
 	~Timer();
 
@@ -59,7 +59,8 @@ public:
 
 	bool isEnabled();
 	bool isSingleShot();
-
+    MillisType millis2;
+ //   (unsigned long)(*millis2(void));
 };
 
 
