@@ -1,8 +1,8 @@
 /*
-SoftwareSerialESP.h
+SoftwareSerial.h
 
-SoftwareSerialESP.cpp - Implementation of the Arduino software serial for ESP8266.
-Copyright (c) 2015-2016 Peter Lerup. All rights reserved.
+SoftwareSerial.cpp - Implementation of the Arduino software serial for ESP8266.
+Copyright (c) 2015 Peter Lerup. All rights reserved.
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -25,7 +25,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include <inttypes.h>
 #include <Stream.h>
-
+extern "C" {
+  #include "osapi.h"
+  #include "ets_sys.h"
+  #include "user_interface.h"
+}
 
 // This class is compatible with the corresponding AVR one,
 // the constructor however has an optional rx buffer size.
@@ -35,36 +39,30 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 class SoftwareSerialESP : public Stream
 {
 public:
-   SoftwareSerialESP(int receivePin, int transmitPin, bool inverse_logic = false, unsigned int buffSize = 64);
+   SoftwareSerialESP(int receivePin, int transmitPin, unsigned int buffSize = 64);
    ~SoftwareSerialESP();
 
    void begin(long speed);
-   long baudRate();
-   void setTransmitEnablePin(int transmitEnablePin);
-
 
    int peek();
 
-   virtual size_t write(uint8_t byte);
+   virtual size_t write(uint8_t byte)  ;
    virtual int read();
    virtual int available();
    virtual void flush();
    operator bool() {return m_rxValid || m_txValid;}
 
-   // Disable or enable interrupts on the rx pin
-   void enableRx(bool on);
-
-   void rxRead();
+   static void handle_interrupt(SoftwareSerialESP *swSerObj) ICACHE_RAM_ATTR  ;
 
    using Print::write;
 
 private:
    bool isValidGPIOpin(int pin);
+   void rxRead() ICACHE_RAM_ATTR  ;
 
    // Member variables
-   int m_rxPin, m_txPin, m_txEnablePin;
-   bool m_rxValid, m_txValid, m_txEnableValid;
-   bool m_invert;
+   int m_rxPin, m_txPin;
+   bool m_rxValid, m_txValid;
    unsigned long m_bitTime;
    unsigned int m_inPos, m_outPos;
    int m_buffSize;

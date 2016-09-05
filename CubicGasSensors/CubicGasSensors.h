@@ -9,11 +9,12 @@
 #include <RunningAverage.h>
 #include <Streaming.h>
 #include <EEPROM.h>
+#include <Arduino.h>
 
 
 
-//#ifndef SERIAL
-#define SERIAL Serial
+//#ifndef SERIAL_PORT
+#define SERIAL_PORT Serial
 //#endif
 
 #define NDIR_READ_TIMEOUT 10000L
@@ -40,7 +41,7 @@ class CubicGasSensors
     }
   private:
     RunningAverage raCM1106;//(2);
-    uint32_t lastNDIRRead = 0;
+    uint32_t lastNDIRRead = -100000L;
     uint8_t rx, tx;
     uint16_t eepromReset;
     boolean startedCO2Monitoring = false;
@@ -49,7 +50,7 @@ class CubicGasSensors
     CubicStatus currentStatus = CB_INIT;
     bool sentResetCmd = false;
     //uint8_t ports[4][2] ={{5,12},{12,5},{14,13},{13,14}};
-    uint8_t ports[2][2] ={{14,13},{13,14}};
+    uint8_t ports[2][2] ={ {D7, D6}, {D6, D7}};
     uint8_t sensorType = CM1106;
 
     void setStatus(CubicStatus newStatus);

@@ -1,7 +1,7 @@
 /*
 
 SoftwareSerialESP.cpp - Implementation of the Arduino software serial for ESP8266.
-Copyright (c) 2015-2016 Peter Lerup. All rights reserved.
+Copyright (c) 2015 Peter Lerup. All rights reserved.
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include <Arduino.h>
 
+
 // The Arduino standard GPIO routines are not enough,
 // must use some from the Espressif SDK as well
 extern "C" {
@@ -29,47 +30,9 @@ extern "C" {
 
 #include <SoftwareSerialESP.h>
 
-#define MAX_PIN 15
-
-// As the Arduino attachInterrupt has no parameter, lists of objects
-// and callbacks corresponding to each possible GPIO pins have to be defined
-SoftwareSerialESP *ObjList[MAX_PIN+1];
-
-void ICACHE_RAM_ATTR sws_isr_0() { ObjList[0]->rxRead(); };
-void ICACHE_RAM_ATTR sws_isr_1() { ObjList[1]->rxRead(); };
-void ICACHE_RAM_ATTR sws_isr_2() { ObjList[2]->rxRead(); };
-void ICACHE_RAM_ATTR sws_isr_3() { ObjList[3]->rxRead(); };
-void ICACHE_RAM_ATTR sws_isr_4() { ObjList[4]->rxRead(); };
-void ICACHE_RAM_ATTR sws_isr_5() { ObjList[5]->rxRead(); };
-// Pin 6 to 11 can not be used
-void ICACHE_RAM_ATTR sws_isr_12() { ObjList[12]->rxRead(); };
-void ICACHE_RAM_ATTR sws_isr_13() { ObjList[13]->rxRead(); };
-void ICACHE_RAM_ATTR sws_isr_14() { ObjList[14]->rxRead(); };
-void ICACHE_RAM_ATTR sws_isr_15() { ObjList[15]->rxRead(); };
-
-static void (*ISRList[MAX_PIN+1])() = {
-      sws_isr_0,
-      sws_isr_1,
-      sws_isr_2,
-      sws_isr_3,
-      sws_isr_4,
-      sws_isr_5,
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      sws_isr_12,
-      sws_isr_13,
-      sws_isr_14,
-      sws_isr_15
-};
-
-SoftwareSerialESP::SoftwareSerialESP(int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize) {
-   m_rxValid = m_txValid = m_txEnableValid = false;
+SoftwareSerialESP::SoftwareSerialESP(int receivePin, int transmitPin, unsigned int buffSize) {
+   m_rxValid = m_txValid = false;
    m_buffer = NULL;
-   m_invert = inverse_logic;
    if (isValidGPIOpin(receivePin)) {
       m_rxPin = receivePin;
       m_buffSize = buffSize;
@@ -78,60 +41,39 @@ SoftwareSerialESP::SoftwareSerialESP(int receivePin, int transmitPin, bool inver
          m_rxValid = true;
          m_inPos = m_outPos = 0;
          pinMode(m_rxPin, INPUT);
-         ObjList[m_rxPin] = this;
-         enableRx(true);
+         // Use SDK interrupt management as Arduino attachInterrupt doesn't take any parameter
+         ETS_GPIO_INTR_ATTACH(handle_interrupt, this);
+         GPIO_REG_WRITE(GPIO_STATUS_W1TC_ADDRESS, BIT(m_rxPin));
+         gpio_pin_intr_state_set(GPIO_ID_PIN(m_rxPin), GPIO_PIN_INTR_NEGEDGE);
       }
    }
    if (isValidGPIOpin(transmitPin)) {
       m_txValid = true;
       m_txPin = transmitPin;
       pinMode(m_txPin, OUTPUT);
-      digitalWrite(m_txPin, !m_invert);
    }
    // Default speed
    begin(9600);
 }
 
 SoftwareSerialESP::~SoftwareSerialESP() {
-   enableRx(false);
-   if (m_rxValid)
-      ObjList[m_rxPin] = NULL;
+   // No available SDK API to detach an interrupt handler,
+   // just disable the pin interrupt for now
+   gpio_pin_intr_state_set(GPIO_ID_PIN(m_rxPin), GPIO_PIN_INTR_DISABLE);
    if (m_buffer)
       free(m_buffer);
 }
 
 bool SoftwareSerialESP::isValidGPIOpin(int pin) {
-   return (pin >= 0 && pin <= 5) || (pin >= 12 && pin <= MAX_PIN);
+   // Some GPIO pins are reserved by the system
+   return (pin >= 0 && pin <= 5) || (pin >= 12 && pin <= 15);
 }
 
 void SoftwareSerialESP::begin(long speed) {
-   // Use getCycleCount() loop to get as exact timing as possible
-   m_bitTime = ESP.getCpuFreqMHz()*1000000/speed;
-}
-
-long SoftwareSerialESP::baudRate() {
-   // Use getCycleCount() loop to get as exact timing as possible
-  long speed = ESP.getCpuFreqMHz()*1000000/m_bitTime;
-   return speed;
-}
-
-void SoftwareSerialESP::setTransmitEnablePin(int transmitEnablePin) {
-  if (isValidGPIOpin(transmitEnablePin)) {
-     m_txEnableValid = true;
-     m_txEnablePin = transmitEnablePin;
-     pinMode(m_txEnablePin, OUTPUT);
-     digitalWrite(m_txEnablePin, LOW);
-  } else {
-     m_txEnableValid = false;
-  }
-}
-
-void SoftwareSerialESP::enableRx(bool on) {
-   if (m_rxValid) {
-      if (on)
-         attachInterrupt(m_rxPin, ISRList[m_rxPin], m_invert ? RISING : FALLING);
-      else
-         detachInterrupt(m_rxPin);
+   m_bitTime = round(1000000.0/speed);
+   if (m_bitTime < 5 || m_bitTime > 500) {
+      // Invalid speed
+      m_rxValid = m_txValid = false;
    }
 }
 
@@ -143,24 +85,19 @@ int SoftwareSerialESP::read() {
 }
 
 int SoftwareSerialESP::available() {
-   if (!m_rxValid) return 0;
-   int avail = m_inPos - m_outPos;
-   if (avail < 0) avail += m_buffSize;
-   return avail;
+   return m_rxValid && ((m_inPos-m_outPos) > 0);
 }
 
-#define WAIT { while (ESP.getCycleCount()-start < wait); wait += m_bitTime; }
+// Use micros loop to get as exect timing as possible
+#define WAIT { while (system_get_time()-start < wait); wait += m_bitTime; }
 
 size_t SoftwareSerialESP::write(uint8_t b) {
    if (!m_txValid) return 0;
-
-   if (m_invert) b = ~b;
-   // Disable interrupts in order to get a clean transmit
+   // Disable interrupt in order to get a clean transmit
    cli();
-   if (m_txEnableValid) digitalWrite(m_txEnablePin, HIGH);
-   unsigned long wait = m_bitTime;
+   uint16_t wait = m_bitTime;
    digitalWrite(m_txPin, HIGH);
-   unsigned long start = ESP.getCycleCount();
+   unsigned long start = system_get_time();
     // Start bit;
    digitalWrite(m_txPin, LOW);
    WAIT;
@@ -172,7 +109,6 @@ size_t SoftwareSerialESP::write(uint8_t b) {
    // Stop bit
    digitalWrite(m_txPin, HIGH);
    WAIT;
-   if (m_txEnableValid) digitalWrite(m_txEnablePin, LOW);
    sei();
    return 1;
 }
@@ -186,11 +122,14 @@ int SoftwareSerialESP::peek() {
    return m_buffer[m_outPos];
 }
 
-void ICACHE_RAM_ATTR SoftwareSerialESP::rxRead() {
-   // Advance the starting point for the samples but compensate for the
-   // initial delay which occurs before the interrupt is delivered
-   unsigned long wait = m_bitTime + m_bitTime/3 - 500;
-   unsigned long start = ESP.getCycleCount();
+void SoftwareSerialESP::rxRead() {
+   uint16_t wait = m_bitTime;
+   unsigned long start = system_get_time();
+   // Skip half start bit unless this is less than normal interrupt delay time
+   if (m_bitTime > 10) {
+     wait = m_bitTime/2;
+     WAIT;
+   }
    uint8_t rec = 0;
    for (int i = 0; i < 8; i++) {
      WAIT;
@@ -198,7 +137,6 @@ void ICACHE_RAM_ATTR SoftwareSerialESP::rxRead() {
      if (digitalRead(m_rxPin))
        rec |= 0x80;
    }
-   if (m_invert) rec = ~rec;
    // Stop bit
    WAIT;
    // Store the received value in the buffer unless we have an overflow
@@ -207,9 +145,24 @@ void ICACHE_RAM_ATTR SoftwareSerialESP::rxRead() {
       m_buffer[m_inPos] = rec;
       m_inPos = next;
    }
-   // Must clear this bit in the interrupt register,
-   // it gets set even when interrupts are disabled
-   GPIO_REG_WRITE(GPIO_STATUS_W1TC_ADDRESS, 1 << m_rxPin);
 }
 
+void SoftwareSerialESP::handle_interrupt(SoftwareSerialESP *swSerObj)  {
+   if (!swSerObj) return;
+
+   // Check if this interrupt was was coming from the the rx pin of this object
+   int pin = swSerObj->m_rxPin;
+   uint32_t gpioStatus = GPIO_REG_READ(GPIO_STATUS_ADDRESS);
+   if (!(gpioStatus & BIT(pin))) return;
+   // Clear the interrupt
+   GPIO_REG_WRITE(GPIO_STATUS_W1TC_ADDRESS, gpioStatus);
+   // Seems like the interrupt is delivered on all flanks in spite
+   // of GPIO_PIN_INTR_NEGEDGE. Hence ignore unless we have a start bit
+   if (digitalRead(pin)) return;
+
+   // Disable GPIO interrupts when sampling the incoming byte
+   ETS_GPIO_INTR_DISABLE();
+   swSerObj->rxRead();
+   ETS_GPIO_INTR_ENABLE();
+}
 
