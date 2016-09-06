@@ -17,7 +17,7 @@
 CubicGasSensors::CubicGasSensors(CubicStatusCb _cb, uint16_t _eepromReset, uint8_t _rx, uint8_t _tx): rx(_rx), tx(_tx), eepromReset(_eepromReset), raCM1106(2), statusCb(_cb) {}
 
 void CubicGasSensors::init() {
-    for (int j=0; j<10; j++) {
+    for (int j=0; j<2; j++) {
         for (int i=0; i < 2; i++) {
             rx = ports[i][0];
             tx = ports[i][1];
