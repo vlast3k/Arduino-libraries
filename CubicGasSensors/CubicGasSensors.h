@@ -31,7 +31,7 @@ class CubicGasSensors
   // user-accessible "public" interface
   public:
     CubicGasSensors(CubicStatusCb _cb, uint16_t _eepromReset, uint8_t _rx=100, uint8_t _tx=100 ) ;
-    void init();
+    bool init(bool DEBUG);
     int getCO2(boolean dbg=false);
     void printDebugInfo();
     int rawReadCM1106_CO2(bool dbg=false);

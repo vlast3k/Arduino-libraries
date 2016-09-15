@@ -16,7 +16,7 @@
 
 CubicGasSensors::CubicGasSensors(CubicStatusCb _cb, uint16_t _eepromReset, uint8_t _rx, uint8_t _tx): rx(_rx), tx(_tx), eepromReset(_eepromReset), raCM1106(2), statusCb(_cb) {}
 
-void CubicGasSensors::init() {
+bool CubicGasSensors::init(bool DEBUG) {
     for (int j=0; j<2; j++) {
         for (int i=0; i < 2; i++) {
             rx = ports[i][0];
@@ -30,14 +30,14 @@ void CubicGasSensors::init() {
                 } else {
                     SERIAL_PORT << F("Sensor Type not recognized\n");
                 }
-                return ;
+                return true;
             }
         }
-        SERIAL_PORT << F("+");
+        if (DEBUG) SERIAL_PORT << F("+");
         delay(200);
     }
-    SERIAL_PORT << F("ERROR: Could not locate CO2 Sensor") << endl;
-    return ;
+    if (DEBUG) SERIAL_PORT << F("ERROR: Could not locate Cubic CO2 Sensor") << endl;
+    return false;
 }
 
 int CubicGasSensors::getSWVersion(bool dbg) {
