@@ -24,7 +24,7 @@
 class RunningAverageSt
 {
 public:
-    RunningAverageSt(void) : _size(1){clear();}; 
+    RunningAverageSt(void) : _size(2){clear();}; 
     //RunningAverageSt(uint8_t);
     //~RunningAverage();
 

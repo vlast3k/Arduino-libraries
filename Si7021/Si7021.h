@@ -8,7 +8,7 @@ class SI7021
 	public:
 			SI7021();
 			/* Main Functions */
-			void begin(int sda = 4, int scl = 5);
+			bool begin();
 			float readHumidity();
 			float readTemp();
 			float readTempPrev();
@@ -29,7 +29,7 @@ class SI7021
 			uint16_t getDeviceID();
 			uint8_t getFirmwareVer();
 			uint8_t checkVDD();
-			void reset(uint8_t delayR = 15);
+			bool reset(uint8_t delayR = 15);
 
 			/* Conversion Functions */
 			uint16_t floatToInt(float FtoI);

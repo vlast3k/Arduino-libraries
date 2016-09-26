@@ -10,7 +10,7 @@ SI7021::SI7021()
 {
 }
 
-void SI7021::begin(int sda, int scl)
+bool SI7021::begin()
 {
 	Wire.begin();											// Begin I2C
     //Serial.println("a0aaaaaa22222");
@@ -19,7 +19,7 @@ void SI7021::begin(int sda, int scl)
     //Serial.println("a1");
     //delay(100);
     
-	reset();												// Reset sensor
+	return reset();												// Reset sensor
 }
 
 float SI7021::readHumidity()
@@ -153,13 +153,14 @@ uint8_t SI7021::checkVDD()
 	return (readRegister(0xE7) & (0x40)) ? 0 : 1;			// Return 0=LOW / 1=OK
 }
 
-void SI7021::reset(uint8_t delayR)
+bool SI7021::reset(uint8_t delayR)
 {
 
 	Wire.beginTransmission(SI7021_ADDR);
 	Wire.write(0xFE); 										// Write reset command
-    Wire.endTransmission();
+    int r = Wire.endTransmission();
 	delay(delayR);											// Default = 15ms
+    return r==0;
 }
 
 uint16_t SI7021::floatToInt(float FtoI)
