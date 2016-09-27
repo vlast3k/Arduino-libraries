@@ -21,10 +21,11 @@
 
 #include "Arduino.h"
 
+#define RASIZE 2
 class RunningAverageSt
 {
 public:
-    RunningAverageSt(void) : _size(2){clear();}; 
+    RunningAverageSt(void) : _size(RASIZE){clear();}; 
     //RunningAverageSt(uint8_t);
     //~RunningAverage();
 
@@ -47,7 +48,7 @@ protected:
     uint8_t _cnt;
     uint8_t _idx;
     double _sum;
-    double _ar[1];
+    double _ar[RASIZE];
     double _min;
     double _max;
 };
