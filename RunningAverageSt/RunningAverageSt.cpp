@@ -48,8 +48,6 @@ void RunningAverageSt::clear()
     _cnt = 0;
     _idx = 0;
     _sum = 0.0;
-    _min = NAN;
-    _max = NAN;
     for (uint8_t i = 0; i < _size; i++)
     {
         _ar[i] = 0.0; // keeps addValue simple
@@ -65,10 +63,6 @@ void RunningAverageSt::addValue(double value)
     _sum += _ar[_idx];
     _idx++;
     if (_idx == _size) _idx = 0;  // faster than %
-    // handle min max
-    if (_cnt == 0) _min = _max = value;
-    else if (value < _min) _min = value;
-    else if (value > _max) _max = value;
     // update count as last otherwise if( _cnt == 0) above will fail
     if (_cnt < _size) _cnt++;
 }

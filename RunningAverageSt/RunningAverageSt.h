@@ -21,7 +21,7 @@
 
 #include "Arduino.h"
 
-#define RASIZE 3
+#define RASIZE 6
 class RunningAverageSt
 {
 public:
@@ -34,10 +34,7 @@ public:
     void fillValue(double, uint8_t);
 
     double getAverage();
-    // returns lowest value added to the data-set since last clear
-    double getMin() { return _min; };
-    // returns highest value added to the data-set since last clear
-    double getMax() { return _max; };
+
 
     double getElement(uint8_t idx);
     uint8_t getSize() { return _size; }
@@ -49,8 +46,6 @@ protected:
     uint8_t _idx;
     double _sum;
     double _ar[RASIZE];
-    double _min;
-    double _max;
 };
 
 #endif
