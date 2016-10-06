@@ -21,7 +21,7 @@
 
 #include "Arduino.h"
 
-#define RASIZE 2
+#define RASIZE 6
 class RunningAverageSt
 {
 public:
