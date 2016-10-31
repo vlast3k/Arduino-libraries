@@ -15,12 +15,19 @@
 
 
 CubicGasSensors::CubicGasSensors(CubicStatusCb _cb, uint16_t _eepromReset, uint8_t _rx, uint8_t _tx): rx(_rx), tx(_tx), eepromReset(_eepromReset), raCM1106(2), statusCb(_cb) {}
+bool CubicGasSensors::isInSkippedList(int8_t *list, uint8_t gpio) {
+  for (int i=0; i < 10 && *list > -1; list++) {
+    if (*list == gpio) return true;
+  }
+  return false;
 
-bool CubicGasSensors::init(bool DEBUG) {
+}
+bool CubicGasSensors::init(bool DEBUG, int8_t *skipGPIOs) {
     for (int j=0; j<2; j++) {
         for (int i=0; i < 2; i++) {
             rx = ports[i][0];
             tx = ports[i][1];
+            if (isInSkippedList(skipGPIOs, rx) || isInSkippedList(skipGPIOs, tx)) continue;
             if (DEBUG) SERIAL_PORT << "Trying : " << rx <<","<< tx << endl ;
             if (sensorType = getSWVersion(DEBUG)) {
                 if (sensorType == CM1106) {
