@@ -45,10 +45,10 @@
       BH1750FVI(); 
 
       // Set the I2C address, turn on the sensor, set the mode
-      void Begin(uint8_t Addr = Addr_LOW, uint8_t Mode = Continuous_H);
+      bool begin(uint8_t Addr = Addr_LOW, uint8_t Mode = Continuous_H);
 
       // Power on the sensor
-      void PowerOn(void); 
+      bool PowerOn(void); 
 
       // Sleep the sensor
       void Sleep(void); 
@@ -77,12 +77,14 @@
       // Gets the value in lux from the sensor and returns a float
       // Note the float is only good to 1 or 2 digits
       float GetLux(void);
+      
+      float getLuxAutoScale();
     
     // Private class methods/variables
     private:
 
       // Write an opcode byte to the sensor
-      void I2CWrite(uint8_t Opcode);  
+      bool I2CWrite(uint8_t Opcode);  
 
       // The sensor's I2C address, either 0x23 or 0x5C
       uint8_t Address;

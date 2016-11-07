@@ -33,7 +33,7 @@
  
 // The library includes
 #include <Wire.h>
-#include <BH1750FVI.h>
+#include "BH1750FVI.h"
 #include <Streaming.h>
 // Pin that LED is connected to
 // Connect LED With 100ohm resistor
@@ -51,7 +51,7 @@ void setup() {
    Serial.begin(9600);
   Wire.begin(D6,D7);
   // Start the light sensor by turning on and initializing it.
-  LightSensor.Begin(Addr_LOW, Continuous_H);
+  LightSensor.begin();
  
   // Sets the measurement time register
   // This allows for adjusting the sensitivity

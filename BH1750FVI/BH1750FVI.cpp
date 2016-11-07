@@ -9,7 +9,7 @@ BH1750FVI::BH1750FVI(){
     Sensitivity = 1.00;
  }
   
-  void BH1750FVI::Begin(uint8_t Addr, uint8_t Mode){
+  bool BH1750FVI::begin(uint8_t Addr, uint8_t Mode){
 
     // Set the address
     SetAddress(Addr);
@@ -18,15 +18,16 @@ BH1750FVI::BH1750FVI(){
     Wire.begin(); 
 
     // Power on the sensor
-    PowerOn();
+    if (!PowerOn()) return false;
 
     // Set the mode
     SetMode(Mode);
+    return true;
 
   }
 
-  void BH1750FVI::PowerOn(void){
-    I2CWrite(Power_On ); // Power on the sensor
+  bool BH1750FVI::PowerOn(void){
+    return I2CWrite(Power_On ); // Power on the sensor
   }
 
   void BH1750FVI::Sleep(void){
@@ -170,11 +171,25 @@ BH1750FVI::BH1750FVI(){
     
   }
   
-  void BH1750FVI::I2CWrite(uint8_t Opcode){
+  bool BH1750FVI::I2CWrite(uint8_t Opcode){
 
     // Write a byte to the sensor
     Wire.beginTransmission(Address);
     Wire.write(Opcode);
-    Wire.endTransmission();
+    return Wire.endTransmission() == 0;
 
+  }
+
+  float BH1750FVI::getLuxAutoScale() {
+    SetSensitivity(1.00F);
+    SetMTReg(31);
+    SetMode(Continuous_H);
+    delay(200);
+    float lux = GetLux();
+    if (lux < 500) {
+        SetMTReg(254);
+        SetMode(Continuous_H2);
+        lux = GetLux();
+    }
+    return lux;
   }
