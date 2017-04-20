@@ -24,8 +24,8 @@
 class RunningAverage
 {
 public:
-    RunningAverage(void);
-    RunningAverage(uint8_t);
+    //RunningAverage();
+    RunningAverage(uint8_t size = 2);
     ~RunningAverage();
 
     void clear();
